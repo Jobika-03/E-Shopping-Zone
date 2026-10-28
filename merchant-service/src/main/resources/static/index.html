@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopNexa - Merchant Hub &amp; Order Fulfillment</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar - Matches ShopNexa User Home Page -->
+    <header class="navbar">
+        <a href="/" class="logo-group">
+            <span class="logo">ShopNexa</span>
+            <span class="role-badge-merchant">Seller Hub</span>
+        </a>
+
+        <div class="nav-links" id="navProfileBar" style="display: none;">
+            <a href="http://localhost:8080/home" target="_blank">Storefront</a>
+            <a href="http://localhost:8088/" target="_blank">Delivery Hub</a>
+            <a href="http://localhost:8086/history" target="_blank">Notifications</a>
+            <span class="user-greeting">
+                <span class="avatar-chip" id="userAvatarChip">M</span>
+                <span>Hello, <strong id="currentSellerNameDisplay">Seller</strong></span>
+                <span class="role-pill role-pill-merchant" id="currentSellerIdBadge">#1</span>
+            </span>
+            <button type="button" class="btn-signout" onclick="handleMerchantLogout()">Sign Out</button>
+        </div>
+        <div class="nav-links" id="navGuestBar">
+            <a href="http://localhost:8080/home" target="_blank">Storefront</a>
+            <a href="http://localhost:8088/" target="_blank">Delivery Hub</a>
+            <a href="http://localhost:8080/login" target="_blank">Customer Login</a>
+        </div>
+    </header>
+
+    <!-- 1. Merchant Authentication Screen (Visible when NOT logged in) -->
+    <div id="authSection" class="auth-container" style="display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 72px); width: 100%;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-badge">
+                   <!--  <span>🏪</span> VERIFIED SELLER PORTAL -->
+                </div>
+                <h1 class="auth-title">Merchant Sign In</h1>
+                <!-- <p class="auth-desc">Enter your seller credentials manually or continue using your Google or GitHub account.</p> -->
+            </div>
+
+            <!-- Auth Tabs -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="tabBtnSignIn" onclick="switchAuthTab('signin')">
+                    Manual Sign In
+                </button>
+                <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')">
+                    New Seller Registration
+                </button>
+            </div>
+
+            <div id="authAlert" class="alert" style="display: none; margin-bottom: 1.25rem;"></div>
+
+            <!-- Manual Sign In Form -->
+            <div id="signInTabPane">
+                <form id="merchantLoginForm">
+                    <div class="form-group">
+                        <label class="form-label" for="loginEmail">Merchant Email Address <span class="required">*</span></label>
+                        <input type="email" id="loginEmail" class="form-control" placeholder="Enter your seller email" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">Password <span class="required">*</span></label>
+                        <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-weight: 700; margin-top: 0.5rem;">
+                        Sign In  &rarr;
+                    </button>
+                </form>
+
+                <!-- Quick 1-Click Demo Accounts -->
+                <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed #cbd5e1;">
+                    <!-- <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.65rem;">
+                        ⚡ Quick 1-Click Merchant Login (Select Seller)
+                    </div> -->
+                    <div class="demo-accounts-grid">
+                        <div class="demo-account-chip" onclick="quickMerchantLogin('merchant@eshoppingzone.com', 'merchant123')">
+                            <div>
+                                <strong style="color: #1e3a8a; font-size: 0.92rem;">TechWorld Seller</strong>
+                                <div style="font-size: 0.75rem; color: #64748b;"></div>
+                            </div>
+                            <span class="btn btn-sm btn-outline" style="font-size: 0.78rem;">Sign In &rarr;</span>
+                        </div>
+                        <!-- <div class="demo-account-chip" onclick="quickMerchantLogin('jobikav7@gmail.com', '123456')">
+                            <div>
+                                <strong style="color: #1e3a8a; font-size: 0.92rem;">💼 Jobika V (Store Owner)</strong>
+                                <div style="font-size: 0.75rem; color: #64748b;">jobikav7@gmail.com &bull; Verified Merchant</div>
+                            </div>
+                            <span class="btn btn-sm btn-outline" style="font-size: 0.78rem;">Sign In &rarr;</span>
+                        </div> -->
+                        <div class="demo-account-chip" onclick="quickMerchantLogin('22cs035@nandhaengg.org', 'merchant123')">
+                            <div>
+                                <strong style="color: #1e3a8a; font-size: 0.92rem;">Fulfillment Merchant</strong>
+                                <div style="font-size: 0.75rem; color: #64748b;"></div>
+                            </div>
+                            <span class="btn btn-sm btn-outline" style="font-size: 0.78rem;">Sign In &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Login Divider -->
+                <div class="social-divider">
+                    <span>OR CONTINUE WITH</span>
+                </div>
+
+                <!-- Social Login Buttons -->
+                <div class="social-login-group">
+                    <!-- Google Account Login -->
+                    <button type="button" class="social-btn social-btn-google" onclick="openSocialAuthModal('Google')">
+                        <svg width="18" height="18" viewBox="0 0 48 48">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        <span>Continue with Google Account</span>
+                    </button>
+
+                    <!-- GitHub Account Login -->
+                    <button type="button" class="social-btn social-btn-github" onclick="openSocialAuthModal('GitHub')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                        </svg>
+                        <span>Continue with GitHub Account</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Manual Registration Form -->
+            <div id="registerTabPane" style="display: none;">
+                <form id="merchantRegisterForm">
+                    <div class="form-group">
+                        <label class="form-label" for="regName">Full Name / Seller Name <span class="required">*</span></label>
+                        <input type="text" id="regName" class="form-control" placeholder="e.g. Apex Global Traders" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regEmail">Email Address <span class="required">*</span></label>
+                        <input type="email" id="regEmail" class="form-control" placeholder="e.g. seller@brand.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regPassword">Password <span class="required">*</span></label>
+                        <input type="password" id="regPassword" class="form-control" placeholder="Create a strong password" required minlength="4">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regPhone">Mobile Phone (Optional)</label>
+                        <input type="tel" id="regPhone" class="form-control" placeholder="e.g. 9876543210">
+                    </div>
+
+                    <button type="submit" id="regSubmitBtn" class="btn btn-accent" style="width: 100%; padding: 0.75rem; font-weight: 700; margin-top: 0.5rem;">
+                        Register Merchant Account &rarr;
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Main Merchant Hub (Visible WHEN logged in) -->
+    <main class="container" id="mainPortalSection" style="display: none;">
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Merchant Dashboard &amp; Fulfillment Center</h1>
+                <p class="page-subtitle">Add products manually to the storefront catalog, track customer orders, and update delivery statuses in real-time.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-accent" onclick="switchTab('add-product-tab')">
+                    ➕ Add New Product
+                </button>
+                <button class="btn btn-primary" onclick="switchTab('orders-tab')">
+                    🚚 Track Customer Orders
+                </button>
+                <a href="http://localhost:8088/" target="_blank" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    🛵 Delivery Partner Portal
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-blue">📦</div>
+                <div>
+                    <div class="kpi-val" id="kpiProducts">0</div>
+                    <div class="kpi-lbl">Total Products</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-purple">🛍️</div>
+                <div>
+                    <div class="kpi-val" id="kpiOrders">0</div>
+                    <div class="kpi-lbl">Total Orders</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-green">💰</div>
+                <div>
+                    <div class="kpi-val" id="kpiRevenue">Rs. 0.00</div>
+                    <div class="kpi-lbl">Total Revenue</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-amber">⏳</div>
+                <div>
+                    <div class="kpi-val" id="kpiPending">0</div>
+                    <div class="kpi-lbl">Pending Deliveries</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Bar / Sub-Nav Bar - Identical to ShopNexa Home -->
+        <div class="categories-bar">
+            <strong>Seller Sections:</strong>
+            <button type="button" class="tab-btn active" data-tab="orders-tab" onclick="switchTab('orders-tab')">
+                🚚 Customer Orders &amp; Fulfillment <span class="badge-count" id="ordersCountBadge">0</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="products-tab" onclick="switchTab('products-tab')">
+                📦 Listed Products <span class="badge-count" id="productsCountBadge">0</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="add-product-tab" onclick="switchTab('add-product-tab')">
+                ➕ Add New Product
+            </button>
+            <button type="button" class="tab-btn" data-tab="wallet-tab" onclick="switchTab('wallet-tab')">
+                💳 Merchant Wallet &amp; Earnings
+            </button>
+            <a href="http://localhost:8088/" target="_blank" style="margin-left: auto; text-decoration: none; font-weight: 600; color: #0284c7; font-size: 0.9rem;">
+                🛵 Delivery Partner Portal &rarr;
+            </a>
+        </div>
+
+        <!-- Tab 1: Customer Orders & Manual Tracking -->
+        <section id="orders-tab" class="tab-panel active">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Customer Orders &amp; Fulfillment Tracking</h2>
+                        <p class="card-subtitle">Click any customer order to inspect shipment details, view the live stepper, and manually update status.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                        <button class="btn btn-sm btn-outline filter-btn active" data-filter="ALL">All</button>
+                        <button class="btn btn-sm btn-outline filter-btn" data-filter="PLACED">Placed</button>
+                        <button class="btn btn-sm btn-outline filter-btn" data-filter="CONFIRMED">Confirmed</button>
+                        <button class="btn btn-sm btn-outline filter-btn" data-filter="SHIPPED">Shipped</button>
+                        <button class="btn btn-sm btn-outline filter-btn" data-filter="OUT_FOR_DELIVERY">Out for Delivery</button>
+                        <button class="btn btn-sm btn-outline filter-btn" data-filter="DELIVERED">Delivered</button>
+                    </div>
+                </div>
+
+                <!-- Orders Filter & Search Toolbar -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <div style="position: relative; flex: 1; min-width: 260px; max-width: 440px;">
+                        <input type="text" id="orderSearchInput" class="form-control" placeholder="🔍 Search Order #, Customer, Product, Status..." oninput="handleOrderSearch(this.value)" style="padding-left: 2.25rem; font-size: 0.9rem;">
+                        <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; font-size: 0.95rem;">🔍</span>
+                        <button id="orderSearchClearBtn" type="button" onclick="clearOrderSearch()" style="position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%); border: none; background: none; color: #94a3b8; cursor: pointer; display: none; font-size: 1.15rem; line-height: 1;" title="Clear search">&times;</button>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #64748b;" id="ordersCountSummary">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-clickable" id="ordersTable">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Product / Item</th>
+                                <th>Customer</th>
+                                <th>Total Amount</th>
+                                <th>Payment</th>
+                                <th>Fulfillment Status</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <!-- Populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Order Pagination (Limit 5) -->
+                <div class="pagination-bar" id="ordersPaginationBar" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; border-top: 1px solid #f1f5f9; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="font-size: 0.85rem; color: #64748b;" id="ordersPaginationInfo">
+                        Showing 1 to 5 of 0 orders
+                    </div>
+                    <div class="pagination-controls" id="ordersPaginationControls" style="display: flex; gap: 0.35rem; align-items: center;">
+                        <!-- Generated via JS -->
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="ordersEmptyState" class="empty-state" style="display: none;">
+                    <div class="empty-icon">🛍️</div>
+                    <h3 class="empty-title">No customer orders found</h3>
+                    <p class="empty-desc">When customers purchase your listed items, their orders will appear here automatically for fulfillment and tracking.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Add Product Manually -->
+        <section id="add-product-tab" class="tab-panel">
+            <div class="card" style="max-width: 840px; margin: 0 auto;">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">➕ Add New Product Manually</h2>
+                        <p class="card-subtitle">List a product manually in the ShopNexa catalog. Once added, it becomes immediately available on the Storefront.</p>
+                    </div>
+                </div>
+
+                <div id="addProductAlert" class="alert" style="display: none;"></div>
+
+                <form id="addProductForm">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label" for="productName">Product Name <span class="required">*</span></label>
+                            <input type="text" id="productName" class="form-control" placeholder="e.g. Sony WH-1000XM5 Wireless Noise-Cancelling Headphones" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="productCategory">Category <span class="required">*</span></label>
+                            <input type="text" id="productCategory" class="form-control" list="categoryPresets" placeholder="Select or type category..." required>
+                            <datalist id="categoryPresets">
+                                <option value="Electronics">
+                                <option value="Audio &amp; Headphones">
+                                <option value="Laptops &amp; Computers">
+                                <option value="Smartphones &amp; Tablets">
+                                <option value="Apparel &amp; Fashion">
+                                <option value="Footwear">
+                                <option value="Home &amp; Kitchen">
+                                <option value="Books">
+                                <option value="Sports &amp; Fitness">
+                            </datalist>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="productType">Product Type / Subcategory</label>
+                            <input type="text" id="productType" class="form-control" placeholder="e.g. Electronics, Wearables, Gadgets" value="Electronics">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="productPrice">Price (₹ INR) <span class="required">*</span></label>
+                            <input type="number" id="productPrice" class="form-control" placeholder="e.g. 24999.00" step="0.01" min="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="productStock">Initial Stock Quantity <span class="required">*</span></label>
+                            <input type="number" id="productStock" class="form-control" placeholder="e.g. 50" min="0" value="50" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="productStatus">Availability Status <span class="required">*</span></label>
+                            <select id="productStatus" class="form-control">
+                                <option value="ACTIVE" selected>✓ In Stock (Active)</option>
+                                <option value="OUT_OF_STOCK">✕ Out of Stock</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="productImageUrl">Image URL</label>
+                            <input type="url" id="productImageUrl" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+                            
+                            <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+                                <div class="image-preview-box">
+                                    <img id="imagePreviewImg" src="" alt="Preview">
+                                </div>
+                                <div style="font-size: 0.82rem; color: #64748b;">
+                                    <strong>Live Image Preview:</strong> Product thumbnail will look like this on the storefront.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label" for="productDescription">Product Description</label>
+                            <textarea id="productDescription" class="form-control" rows="3" placeholder="Enter key specifications, warranty details, and overview..."></textarea>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #f1f5f9; padding-top: 1.25rem;">
+                        <button type="reset" class="btn btn-outline">Clear Form</button>
+                        <button type="submit" id="submitProductBtn" class="btn btn-primary">
+                            ➕ Add Product to Catalog
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tab 3: My Products Catalog -->
+        <section id="products-tab" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">My Listed Products</h2>
+                        <p class="card-subtitle">Manage products you have listed in the store catalog.</p>
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="switchTab('add-product-tab')">
+                        ➕ Add New Item
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Product Details</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Price</th>
+                                <th>Offer / Discount</th>
+                                <th>Available Stock</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- Populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="productsEmptyState" class="empty-state" style="display: none;">
+                    <div class="empty-icon">📦</div>
+                    <h3 class="empty-title">No products listed yet</h3>
+                    <p class="empty-desc">You haven't added any products manually yet. Click the button below to add your first product.</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="switchTab('add-product-tab')">
+                        ➕ Add Your First Product
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 4: Merchant Wallet & Earnings -->
+        <section id="wallet-tab" class="tab-panel">
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 class="card-title">💳 Merchant Wallet &amp; Payouts</h2>
+                        <p class="card-subtitle">Real-time settlement balance, sales revenue deposits, and statement history.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.5rem 1.25rem; text-align: right;">
+                            <div style="font-size: 0.72rem; color: #166534; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Settlement Balance</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #15803d;" id="walletBalanceDisplay">Rs. 0.00</div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="number" id="quickDepositAmount" placeholder="Amount (Rs.)" min="1" step="100" style="width: 140px; padding: 0.45rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.88rem;">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="handleMerchantDeposit()" style="font-weight: 600;">
+                                + Add Funds
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="walletAlert" class="alert" style="display: none; margin: 1rem 1.5rem 0;"></div>
+
+                <div class="table-container">
+                    <table class="table" id="walletTable">
+                        <thead>
+                            <tr>
+                                <th>Statement #</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Associated Order</th>
+                                <th>Date &amp; Time</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="walletTableBody">
+                            <!-- Populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Wallet Pagination (Limit 10) -->
+                <div class="pagination-bar" id="walletPaginationBar" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; border-top: 1px solid #f1f5f9; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="font-size: 0.85rem; color: #64748b;" id="walletPaginationInfo">
+                        Showing 1 to 10 of 0 transactions
+                    </div>
+                    <div class="pagination-controls" id="walletPaginationControls" style="display: flex; gap: 0.35rem; align-items: center;">
+                        <!-- Generated via JS -->
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="walletEmptyState" class="empty-state" style="display: none;">
+                    <div class="empty-icon">💳</div>
+                    <h3 class="empty-title">No transaction statements yet</h3>
+                    <p class="empty-desc">When order settlements or wallet recharges occur, transaction history will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Interactive Order Tracking & Status Update Modal -->
+    <div class="modal-overlay" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">
+                        Order Tracking &amp; Fulfillment
+                        <span id="modalOrderId" style="color: var(--primary); margin-left: 0.35rem;">#1001</span>
+                    </h3>
+                    <div style="font-size: 0.85rem; color: #64748b;">
+                        Placed on <span id="modalOrderDate">2026-08-28</span>
+                    </div>
+                </div>
+                <button class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Status Update Alert Box -->
+                <div id="modalAlert" class="alert" style="display: none; margin-bottom: 1.25rem;"></div>
+
+                <!-- Live Visual Stepper -->
+                <div style="margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem;">
+                        📍 Live Delivery Progress
+                    </div>
+                    <div class="tracker-container" id="trackingStepper">
+                        <!-- Stepper generated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Order & Customer Summary Grid -->
+                <div class="order-info-grid">
+                    <div class="info-item">
+                        <label>Customer</label>
+                        <span id="modalCustomerId">Customer Name</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Item Ordered</label>
+                        <span id="modalProductName">Product Name</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Quantity</label>
+                        <span id="modalProductQty">1 Item</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Amount Paid</label>
+                        <span id="modalAmountPaid" style="color: var(--primary-dark);">Rs. 0.00</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Payment Mode</label>
+                        <span id="modalPaymentMode">WALLET</span>
+                    </div>
+                    <div class="info-item" style="grid-column: 1 / -1;">
+                        <label>Shipping Destination</label>
+                        <span id="modalShippingAddress">Street, City, State</span>
+                    </div>
+                 <!-- Return Review Section (Shown when RETURN_REQUESTED) -->
+                <div id="returnReviewCard" style="display: none; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 1.25rem; margin-top: 1.25rem;">
+                    <div>
+                        <div style="font-weight: 700; color: #b45309; font-size: 1rem; display: flex; align-items: center; gap: 6px;">
+                            <span>🔄</span> Customer Return Request (Mistake / Issue Reported)
+                        </div>
+                        <div style="font-size: 0.88rem; color: #78350f; margin-top: 6px;">
+                            <strong>Reported Mistake:</strong> <span id="modalReturnReasonDisplay" style="font-weight: 600;">Product issue reported</span>
+                        </div>
+                        
+                        <!-- Customer Shared Pickup Location Map -->
+                        <div id="modalReturnLocationBlock" style="margin-top: 0.75rem; background: white; border: 1px solid #fed7aa; border-radius: 6px; padding: 0.75rem;">
+                            <div style="font-weight: 700; color: #9a3412; font-size: 0.85rem; display: flex; align-items: center; gap: 4px;">
+                                <span>📍</span> Customer Shared Pickup Location &amp; Map
+                            </div>
+                            <div style="font-size: 0.82rem; color: #475569; margin-top: 4px;">
+                                <strong>Pickup Address:</strong> <span id="modalReturnAddressDisplay">Customer address</span>
+                            </div>
+                            <div style="font-size: 0.82rem; color: #475569; margin-top: 2px;">
+                                <strong>GPS Coordinates:</strong> <span id="modalReturnCoordinatesDisplay">Not provided</span>
+                            </div>
+                            <div style="margin-top: 6px;">
+                                <a id="modalReturnMapLink" href="#" target="_blank" class="btn btn-sm"
+                                   style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 4px;">
+                                    🗺️ View Customer Location on Google Maps &rarr;
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Courier Return Pickup Assignment Dropdown -->
+                        <div style="margin-top: 0.85rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.75rem;">
+                            <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                                🛵 Dispatch Courier for Return Parcel Collection:
+                            </label>
+                            <select id="returnDeliveryPartnerSelect" class="form-control" style="width: 100%; padding: 0.45rem; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.85rem;">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <input type="text" id="returnPickupRemarksInput" placeholder="Optional notes for courier (e.g. Verify package seal)"
+                                   style="width: 100%; margin-top: 6px; padding: 0.45rem; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.85rem; box-sizing: border-box;">
+                        </div>
+
+                        <div style="font-size: 0.82rem; color: #92400e; margin-top: 0.75rem;">
+                            Accepting will approve the return, dispatch a pickup notification to the selected courier with the customer's shared location map, restore inventory, and refund the customer.
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem;">
+                        <button type="button" class="btn btn-sm" onclick="handleApproveReturn()"
+                                style="background: #16a34a; border-color: #15803d; color: white; font-weight: 600; padding: 0.5rem 1.1rem; border-radius: 6px;">
+                            ✅ Accept Return &amp; Refund
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="handleRejectReturn()"
+                                style="color: #dc2626; border-color: #fca5a5; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px;">
+                            ✕ Reject Return
+                        </button>
+                    </div>
+                </div>
+
+                <div id="deliveryAssignmentSection" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-top: 1.25rem;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 0.35rem;">
+                        🛵 Delivery Partner Assignment
+                    </h4>
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.75rem;">
+                        Assign an available delivery partner to fulfill this shipment. When assigned, the partner receives a notification with pickup and customer delivery details, and updates transit milestones via their Delivery Partner Portal.
+                    </p>
+
+                    <!-- Assigned Partner Card (if already assigned) -->
+                    <div id="alreadyAssignedCard" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem;">
+                        <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: #16a34a; margin-bottom: 0.35rem;">
+                            ✅ Partner Assigned to this Order
+                        </div>
+                        <div style="font-weight: 700; font-size: 1.05rem; color: #14532d;" id="assignedPartnerNameDisplay">
+                            Alex Rivera (Express Bike)
+                        </div>
+                        <div style="font-size: 0.85rem; color: #166534; margin-top: 0.25rem;" id="assignedPartnerDetailsDisplay">
+                            Assigned on: Today &bull; Milestones managed via Delivery Hub
+                        </div>
+                        <div style="margin-top: 0.75rem;">
+                            <a href="http://localhost:8088/" id="assignedPartnerPortalLink" target="_blank" class="btn btn-outline" style="font-size: 0.82rem; padding: 0.35rem 0.75rem; text-decoration: none; color: #15803d; border-color: #86efac;">
+                                🚚 Open Delivery Partner Portal (Port 8088) &rarr;
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Assign Partner Form -->
+                    <form id="assignPartnerForm">
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 280px;">
+                                <label for="deliveryPartnerSelect" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem;">
+                                    <span>Select Delivery Partner:</span>
+                                    <span id="partnerStatusMiniBadge" style="font-size: 0.75rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 9999px; background: #f1f5f9; color: #475569;">🟢 Available</span>
+                                </label>
+                                <select id="deliveryPartnerSelect" class="form-control" required onchange="handlePartnerSelectChange(this.value)">
+                                    <option value="">Loading delivery partners...</option>
+                                </select>
+                                <!-- Live courier status warning / notice card -->
+                                <div id="partnerStatusNoticeCard" style="margin-top: 0.45rem; padding: 0.4rem 0.65rem; border-radius: 6px; font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;">
+                                    <span id="partnerNoticeIcon">🟢</span>
+                                    <span id="partnerNoticeText">Ready for immediate pickup and delivery.</span>
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label for="assignRemarksInput" style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem;">
+                                    Special Pickup Instructions:
+                                </label>
+                                <input type="text" id="assignRemarksInput" class="form-control" placeholder="e.g. Fragile package / Pickup at gate">
+                            </div>
+                            <div style="align-self: flex-start; margin-top: 1.5rem;">
+                                <button type="submit" id="btnAssignPartner" class="btn btn-primary" style="height: 40px; white-space: nowrap;">
+                                    🚀 Assign Partner &amp; Notify
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="modalCancelBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Account Auth Dialog Modal -->
+    <div class="modal-overlay" id="socialAccountModal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="socialModalTitle">Sign In with Social Account</h3>
+                <button type="button" class="modal-close" onclick="closeSocialAuthModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 1.25rem;" id="socialModalDesc">
+                    Enter your account details to access your Merchant Hub.
+                </p>
+                <form id="socialAuthForm">
+                    <input type="hidden" id="socialProvider" value="GOOGLE">
+                    <div class="form-group">
+                        <label class="form-label" id="socialEmailLabel">Email Address <span class="required">*</span></label>
+                        <input type="email" id="socialEmail" class="form-control" placeholder="e.g. seller@gmail.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Seller / Store Name (Optional)</label>
+                        <input type="text" id="socialName" class="form-control" placeholder="e.g. Apex Global Traders">
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+                        <button type="button" class="btn btn-outline" onclick="closeSocialAuthModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="socialSubmitBtn">
+                            Continue as Merchant &rarr;
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    <!-- Edit Product Modal ("merchant can update their product count, outof stock and all") -->
+    <div class="modal-overlay" id="editProductModal">
+        <div class="modal-content" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3 class="modal-title">✏️ Edit Product Details &amp; Inventory</h3>
+                <button type="button" class="modal-close" onclick="closeEditProductModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editProductForm" onsubmit="handleSaveEditProduct(event)">
+                    <input type="hidden" id="editProductId">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label" for="editProductName">Product Name <span class="required">*</span></label>
+                            <input type="text" id="editProductName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editProductCategory">Category <span class="required">*</span></label>
+                            <input type="text" id="editProductCategory" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editProductType">Type / Subcategory <span class="required">*</span></label>
+                            <input type="text" id="editProductType" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editProductPrice">Price (₹) <span class="required">*</span></label>
+                            <input type="number" id="editProductPrice" class="form-control" step="0.01" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editProductStock">Stock Quantity <span class="required">*</span></label>
+                            <input type="number" id="editProductStock" class="form-control" min="0" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label" for="editProductStatus">Availability Status <span class="required">*</span></label>
+                            <select id="editProductStatus" class="form-control">
+                                <option value="ACTIVE">✓ In Stock (Active &amp; Purchasing Enabled)</option>
+                                <option value="OUT_OF_STOCK">✕ Out of Stock (Hidden from Buying)</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label" for="editProductImageUrl">Image URL</label>
+                            <input type="url" id="editProductImageUrl" class="form-control">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label" for="editProductDesc">Description</label>
+                            <textarea id="editProductDesc" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
+                        <button type="button" class="btn btn-outline" onclick="closeEditProductModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btnSaveEditProduct">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script src="/js/app.js?v=2.2"></script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopNexa - Delivery Partner </title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar - Matches ShopNexa User Home Page -->
+    <header class="navbar">
+        <a href="/" class="logo-group">
+            <span class="logo">ShopNexa</span>
+            <span class="role-badge-delivery">Delivery</span>
+        </a>
+        <div class="nav-links" id="navLinksAuth" style="display: none;">
+            <a href="http://localhost:8080/home" target="_blank">Storefront</a>
+            <a href="http://localhost:8087/" target="_blank">Seller</a>
+            <div class="live-pulse" title="Live Auto-Sync Active">
+                <span class="live-dot"></span>
+                <span>Live Sync</span>
+            </div>
+            <!-- Availability Switcher Dropdown -->
+            <div style="display: flex; align-items: center; gap: 0.35rem; background: #ffffff; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                <span style="font-size: 0.78rem; font-weight: 700; color: #475569;">Duty:</span>
+                <select id="partnerDutyStatusSelect" onchange="changeCourierDutyStatus(this.value)" style="border: none; font-size: 0.8rem; font-weight: 700; color: #16a34a; background: transparent; cursor: pointer;">
+                    <option value="AVAILABLE">🟢 Available (On-Duty)</option>
+                    <option value="BUSY">🟡 Busy (On Delivery)</option>
+                    <option value="OFFLINE">⚪ Offline (Off-Duty)</option>
+                </select>
+            </div>
+            <!-- Notification Center Bell -->
+            <button type="button" class="btn-notif" id="notifBellBtn" onclick="toggleNotificationDrawer()" title="Dispatch Notifications">
+                🔔 <span class="notif-badge empty" id="notifBadgeCount">0</span>
+            </button>
+            <span class="user-greeting">
+                <span>Hello, <strong id="headerPartnerName">Courier</strong></span>
+                <span class="role-pill role-pill-delivery" id="headerPartnerZone">Partner</span>
+            </span>
+            <button type="button" class="btn-signout" onclick="handleCourierLogout()">Sign Out</button>
+        </div>
+        <div class="nav-links" id="navLinksGuest">
+            <a href="http://localhost:8080/home" target="_blank">Storefront</a>
+            <a href="http://localhost:8087/" target="_blank">Seller Hub</a>
+            <a href="http://localhost:8080/login" target="_blank">Customer Login</a>
+        </div>
+    </header>
+
+    <!-- Notification Drawer / Dropdown -->
+    <div id="notifDropdown" class="notif-dropdown">
+        <div class="notif-header">
+            <h4>🔔 Order Assignments (<span id="notifTotalCount">0</span>)</h4>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" onclick="loadNotifications(true)" style="border: none; background: none; color: #2563eb; font-size: 0.8rem; font-weight: 700; cursor: pointer;">↻ Refresh</button>
+                <button type="button" onclick="toggleNotificationDrawer()" style="border: none; background: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer;">&times;</button>
+            </div>
+        </div>
+        <div class="notif-body" id="notifListContainer">
+            <div style="text-align: center; padding: 2rem 1rem; color: #94a3b8; font-size: 0.85rem;">
+                No notifications yet.<br/>When merchants assign orders, they will appear here!
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. Delivery Partner Authentication Screen (Shown when not logged in) -->
+    <div id="authSection" class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <span class="role-badge-delivery" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;">🛵 Verified Logistics Portal</span>
+                <h1 class="auth-title">Delivery Partner Sign In</h1>
+                <!-- <p class="auth-subtitle">Log in to view assigned customer orders, access delivery destinations, and advance fulfillment milestones.</p>
+             -->
+            </div>
+
+            <!-- Auth Tabs -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="tabBtnSignIn" onclick="switchAuthTab('signin')">
+                    Sign In
+                </button>
+                <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')">
+                    New Partner Registration
+                </button>
+            </div>
+
+            <div id="authAlert" class="alert" style="display: none;"></div>
+
+            <!-- Sign In Pane -->
+            <div id="signInPane">
+                <form id="partnerLoginForm" onsubmit="handlePartnerLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="loginEmail"> Email Address <span style="color:#e53e3e;">*</span></label>
+                        <input type="email" id="loginEmail" class="form-control" placeholder="Enter the Email" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">Password <span style="color:#e53e3e;">*</span></label>
+                        <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" id="loginBtn" class="btn" style="width: 100%; padding: 0.75rem; font-weight: 700; margin-top: 0.25rem;">
+                        Sign In &rarr;
+                    </button>
+                </form>
+
+                <!-- Quick 1-Click Demo Accounts -->
+                <div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px dashed #cbd5e1;">
+                    <!-- <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.65rem;">
+                        ⚡ Quick 1-Click Demo Sign-In (Click any Courier below)
+                    </div> -->
+                    <div class="demo-accounts-grid">
+                        <div class="demo-account-chip" onclick="quickLogin('alex.rider@fastcourier.com', 'partner123')">
+                            <div>
+                                <strong style="color: #1e3a8a; font-size: 0.92rem;">🚴 Alex Rivera</strong>
+                                <!-- <div style="font-size: 0.75rem; color: #64748b;">Express Bike &bull; Zone: Central Metro</div> -->
+                            </div>
+                            <span class="btn btn-sm btn-outline" style="font-size: 0.78rem;">Login &rarr;</span>
+                        </div>
+                        <div class="demo-account-chip" onclick="quickLogin('support@bluedart.delivery.com', 'partner123')">
+                            <div>
+                                <strong style="color: #1e3a8a; font-size: 0.92rem;">🚐 BlueDart Express Logistics</strong>
+                                <!-- <div style="font-size: 0.75rem; color: #64748b;">Fleet Van &bull; Zone: National Coverage</div> -->
+                            </div>
+                            <span class="btn btn-sm btn-outline" style="font-size: 0.78rem;">Login &rarr;</span>
+                        </div>
+                        <div class="demo-account-chip" onclick="quickLogin('priya.logistics@swiftfleet.com', 'partner123')">
+                            <div>
+                                <strong style="color: #1e3a8a; font-size: 0.92rem;">🚚 Priya Sharma (City Fleet)</strong>
+                               <!--  <div style="font-size: 0.75rem; color: #64748b;">City Van &bull; Zone: East & South Hubs</div> -->
+                            </div>
+                            <span class="btn btn-sm btn-outline" style="font-size: 0.78rem;">Login &rarr;</span>
+                        </div>
+                        <div class="demo-account-chip" onclick="quickLogin('dispatch@shadowfax.com', 'partner123')">
+                            <div>
+                                <strong style="color: #1e3a8a; font-size: 0.92rem;">📦 ShadowFax Delivery Network</strong>
+                               <!--  <div style="font-size: 0.75rem; color: #64748b;">Express Cargo &bull; Zone: West Zone</div> -->
+                            </div>
+                            <span class="btn btn-sm btn-outline" style="font-size: 0.78rem;">Login &rarr;</span>
+                        </div>
+                        <div class="demo-account-chip" onclick="quickLogin('vikram.cargo@transit.com', 'partner123')">
+                            <div>
+                                <strong style="color: #1e3a8a; font-size: 0.92rem;">🚛 Vikram Singh (Heavy Transit)</strong>
+                               <!--  <div style="font-size: 0.75rem; color: #64748b;">Transit Truck &bull; Zone: North Interstate</div> -->
+                            </div>
+                            <span class="btn btn-sm btn-outline" style="font-size: 0.78rem;">Login &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Pane -->
+            <div id="registerPane" style="display: none;">
+                <form id="partnerRegisterForm" onsubmit="handlePartnerRegister(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="regName">Courier / Company Name <span style="color:#e53e3e;">*</span></label>
+                        <input type="text" id="regName" class="form-control" placeholder="e.g. Swift Express Logistics" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="regEmail">Email Address <span style="color:#e53e3e;">*</span></label>
+                            <input type="email" id="regEmail" class="form-control" placeholder="courier@fastdelivery.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regPhone">Phone Number <span style="color:#e53e3e;">*</span></label>
+                            <input type="tel" id="regPhone" class="form-control" placeholder="+91 98765 00000" required>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="regVehicle">Vehicle Fleet Type</label>
+                            <select id="regVehicle" class="form-control">
+                                <option value="Bike">Motorcycle / Scooter</option>
+                                <option value="Fleet Van">Delivery Van</option>
+                                <option value="Cargo Truck">Heavy Transit Truck</option>
+                                <option value="Courier Partner">Standard Logistics</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regZone">Service Operational Zone</label>
+                            <input type="text" id="regZone" class="form-control" placeholder="e.g. Central Metro / Citywide" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regPassword">Create Account Password <span style="color:#e53e3e;">*</span></label>
+                        <input type="password" id="regPassword" class="form-control" placeholder="Minimum 6 characters" required>
+                    </div>
+
+                    <button type="submit" id="registerBtn" class="btn btn-success" style="width: 100%; padding: 0.75rem; font-weight: 700;">
+                        Register New Delivery Partner &rarr;
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Delivery Partner Dashboard (Shown when logged in) -->
+    <div id="dashboardSection" style="display: none;">
+        <div class="container">
+            
+            <!-- Categories Bar / Filter Sub-nav - Identical to ShopNexa Home -->
+            <div class="categories-bar">
+                <div class="mode-toggle">
+                    <button type="button" class="mode-btn active" id="btnModeMine" onclick="setViewMode('MINE')">My Deliveries (<span id="countMineDeliveries">0</span>)</button>
+                    <button type="button" class="mode-btn" id="btnModeAll" onclick="setViewMode('ALL_COURIERS')">All Network (<span id="countSystemDeliveries">0</span>)</button>
+                </div>
+                <strong>Filter:</strong>
+                <button type="button" class="filter-btn active" data-filter="ALL" onclick="setDeliveryFilter('ALL', this)">All (<span id="countAll">0</span>)</button>
+                <button type="button" class="filter-btn" data-filter="ASSIGNED" onclick="setDeliveryFilter('ASSIGNED', this)">📦 Assigned (<span id="countAssigned">0</span>)</button>
+                <button type="button" class="filter-btn" data-filter="SHIPPED" onclick="setDeliveryFilter('SHIPPED', this)">🚚 In Transit (<span id="countShipped">0</span>)</button>
+                <button type="button" class="filter-btn" data-filter="OUT_FOR_DELIVERY" onclick="setDeliveryFilter('OUT_FOR_DELIVERY', this)">🛵 Out for Delivery (<span id="countOut">0</span>)</button>
+                <button type="button" class="filter-btn" data-filter="DELIVERED" onclick="setDeliveryFilter('DELIVERED', this)">✅ Delivered (<span id="countDelivered">0</span>)</button>
+                
+                <!-- Quick Switcher Dropdown inside Categories Bar -->
+                <div class="courier-switcher">
+                    <span style="font-size: 0.82rem; font-weight: 700; color: #64748b;">Active Courier:</span>
+                    <select id="partnerQuickSelect" onchange="handlePartnerSwitch(this.value)">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+            </div>
+
+            <div id="dashboardAlert" class="alert" style="display: none;"></div>
+
+            <!-- High Visibility Live Assignment Notification Banner -->
+            <div id="newAssignmentBanner" class="assignment-alert-banner" style="display: none;">
+                <div class="banner-icon-container">
+                    <span class="banner-pulse-icon">🔔</span>
+                </div>
+                <div class="banner-content">
+                    <div class="banner-tag">NEW ASSIGNMENT NOTIFICATION FROM MERCHANT</div>
+                    <h3 id="bannerOrderHeading" class="banner-heading">Order #16 - Men Watch</h3>
+                    <p id="bannerOrderMeta" class="banner-meta">
+                        Customer: <strong id="bannerCustName">Customer</strong> &bull; Destination: <strong id="bannerCustAddress">Address on file</strong> &bull; Total: <strong id="bannerAmount">Rs. 0.00</strong>
+                    </p>
+                </div>
+                <div class="banner-actions" id="bannerActionButtons">
+                    <!-- Injected dynamically with 1-click status buttons -->
+                </div>
+                <button type="button" class="banner-close-btn" onclick="dismissAssignmentBanner()" title="Dismiss notification">&times;</button>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-blue">📦</div>
+                    <div>
+                        <div class="kpi-val" id="kpiAssigned">0</div>
+                        <div class="kpi-lbl">New Assigned Orders</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-amber">🚚</div>
+                    <div>
+                        <div class="kpi-val" id="kpiShipped">0</div>
+                        <div class="kpi-lbl">In Transit (Shipped)</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-purple">🛵</div>
+                    <div>
+                        <div class="kpi-val" id="kpiOutForDelivery">0</div>
+                        <div class="kpi-lbl">Out for Delivery</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-green">✅</div>
+                    <div>
+                        <div class="kpi-val" id="kpiDelivered">0</div>
+                        <div class="kpi-lbl">Completed Deliveries</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #fef3c7; color: #b45309;">💰</div>
+                    <div>
+                        <div class="kpi-val" id="kpiEarnings" style="color: #b45309;">Rs. 0.00</div>
+                        <div class="kpi-lbl">Daily Earnings + Incentives</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deliveries Table Card -->
+            <div class="card">
+                <div class="card-head">
+                    <div>
+                        <h2 class="card-title">Assigned Customer Shipments &amp; Live Fulfillment</h2>
+                        <p style="font-size: 0.85rem; color: #718096; margin-top: 0.25rem;">
+                            Orders assigned by merchants to your courier profile. Update status as you pick up packages and deliver to customer destinations.
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="loadDeliveries()">
+                        🔄 Refresh Shipments
+                    </button>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Item Ordered</th>
+                                <th>Customer &amp; Shipping Destination</th>
+                                <th>Amount / Mode</th>
+                                <th>Current Status</th>
+                                <th style="text-align: right;">Milestone Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deliveriesTableBody">
+                            <!-- Populated dynamically via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Milestone Update Modal -->
+    <div class="modal-overlay" id="statusModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modalOrderTitle">Update Delivery Milestone</h3>
+                    <div style="font-size: 0.82rem; color: #718096;" id="modalCustomerSubtitle">Customer Order Fulfillment</div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- 4-Stage Stepper -->
+                <div class="stepper">
+                    <div class="step-item" id="step-assigned">
+                        <div class="step-circle">1</div>
+                        <div class="step-title">Assigned</div>
+                    </div>
+                    <div class="step-item" id="step-shipped">
+                        <div class="step-circle">2</div>
+                        <div class="step-title">Shipped</div>
+                    </div>
+                    <div class="step-item" id="step-out">
+                        <div class="step-circle">3</div>
+                        <div class="step-title">Out for Delivery</div>
+                    </div>
+                    <div class="step-item" id="step-delivered">
+                        <div class="step-circle">4</div>
+                        <div class="step-title">Delivered</div>
+                    </div>
+                </div>
+
+                <!-- Customer Destination Box -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 0.35rem;">📍 Delivery Destination</div>
+                    <div id="modalDestName" style="font-weight: 700; color: #1a202c;">Customer Name</div>
+                    <div id="modalDestAddress" style="font-size: 0.88rem; color: #4a5568; margin-top: 0.2rem;">Full street address, city, state, pin</div>
+                    <div id="modalDestPhone" style="font-size: 0.85rem; color: #2b6cb0; font-weight: 600; margin-top: 0.35rem;">📞 Contact Number</div>
+                </div>
+
+                <!-- Select Next Milestone Stage -->
+                <div style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Select Delivery Milestone:</label>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" id="btnSetShipped" class="btn btn-sm btn-outline" onclick="setNextStatus('SHIPPED')">
+                            📦 Mark Shipped
+                        </button>
+                        <button type="button" id="btnSetOut" class="btn btn-sm btn-outline" onclick="setNextStatus('OUT_FOR_DELIVERY')">
+                            🛵 Out for Delivery
+                        </button>
+                        <button type="button" id="btnSetDelivered" class="btn btn-sm btn-outline" onclick="setNextStatus('DELIVERED')">
+                            ✅ Mark Delivered
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Expected Delivery Time (Shown for OUT_FOR_DELIVERY) -->
+                <div id="deliveryTimeBox" style="display: none; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 700; color: #1e40af; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 6px;">
+                        <span>⏰</span> Assign Expected Delivery Time (For Customer Safety &amp; Tracking):
+                    </label>
+                    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.6rem;">
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 0.78rem; background: #ffffff; padding: 0.25rem 0.6rem;" onclick="setEstimatedTimePreset('Within 30 mins')">⚡ Within 30 mins</button>
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 0.78rem; background: #ffffff; padding: 0.25rem 0.6rem;" onclick="setEstimatedTimePreset('Within 45 mins')">🛵 Within 45 mins</button>
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 0.78rem; background: #ffffff; padding: 0.25rem 0.6rem;" onclick="setEstimatedTimePreset('Within 1 hour')">⏱️ Within 1 hour</button>
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 0.78rem; background: #ffffff; padding: 0.25rem 0.6rem;" onclick="setEstimatedTimePreset('Between 2:00 PM - 4:00 PM')">🕐 2:00 PM - 4:00 PM</button>
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 0.78rem; background: #ffffff; padding: 0.25rem 0.6rem;" onclick="setEstimatedTimePreset('Today by 6:00 PM')">🌇 Today by 6:00 PM</button>
+                    </div>
+                    <input type="text" id="modalEstimatedTime" class="form-control" placeholder="e.g. Today within 30-45 mins">
+                    <div style="font-size: 0.78rem; color: #2563eb; margin-top: 4px;">
+                        🛡️ This estimated arrival time will be shown live to the customer on their My Orders page.
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="modalRemarks">Courier Dispatch Notes / OTP / Verification (Optional):</label>
+                    <input type="text" id="modalRemarks" class="form-control" placeholder="e.g. Package picked up / Handed directly to customer">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button type="button" id="btnSaveStatus" class="btn btn-success" onclick="submitStatusUpdate()">
+                    💾 Save Status &amp; Update Tracking
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Failure & Rescheduling Modal -->
+    <div class="modal-overlay" id="failDeliveryModal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" style="background: #fff1f2; border-bottom: 1px solid #fecdd3;">
+                <div>
+                    <h3 style="color: #991b1b; margin: 0;">⚠️ Record Delivery Failure</h3>
+                    <div style="font-size: 0.82rem; color: #b91c1c;">Provide failure reason for order fulfillment audit</div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeFailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="failOrderId" />
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 700;">Reason for Non-Delivery <span style="color: #dc2626;">*</span></label>
+                    <select id="failReasonSelect" class="form-control" style="font-weight: 600;">
+                        <option value="Customer Unreachable / Phone Switched Off">📞 Customer Unreachable / Phone Switched Off</option>
+                        <option value="Customer Address Incomplete / Incorrect">📍 Address Incomplete / Incorrect</option>
+                        <option value="Premises Closed / Customer Unavailable">🚪 Premises Locked / Customer Not at Location</option>
+                        <option value="Customer Requested Rescheduling">📅 Customer Requested Later Rescheduling</option>
+                        <option value="Customer Refused to Accept Shipment">⛔ Customer Refused to Accept Package</option>
+                        <option value="Cash Not Ready for COD">💵 Customer Cash Not Ready (COD Order)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Next Action / Rescheduling Plan:</label>
+                    <input type="text" id="failRescheduleDate" class="form-control" placeholder="e.g. Reattempt tomorrow by 11:00 AM" value="Reattempt on next business day" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeFailModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="submitDeliveryFailure()" style="font-weight: 700;">
+                    Confirm Delivery Failure
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

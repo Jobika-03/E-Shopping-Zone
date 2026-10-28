@@ -1,0 +1,14 @@
+com\eshoppingzone\delivery\config\DataInitializer.class
+com\eshoppingzone\delivery\dto\PartnerAuthDto$LoginRequest.class
+com\eshoppingzone\delivery\DeliveryPartnerApplication$1.class
+com\eshoppingzone\delivery\service\DeliveryPartnerService.class
+com\eshoppingzone\delivery\dto\AssignmentRequestDto.class
+com\eshoppingzone\delivery\entity\DeliveryPartner.class
+com\eshoppingzone\delivery\DeliveryPartnerApplication.class
+com\eshoppingzone\delivery\repository\DeliveryAssignmentRepository.class
+com\eshoppingzone\delivery\dto\PartnerAuthDto$LoginResponse.class
+com\eshoppingzone\delivery\service\DeliveryPartnerServiceImpl.class
+com\eshoppingzone\delivery\dto\PartnerAuthDto.class
+com\eshoppingzone\delivery\repository\DeliveryPartnerRepository.class
+com\eshoppingzone\delivery\entity\DeliveryAssignment.class
+com\eshoppingzone\delivery\resource\DeliveryPartnerResource.class
