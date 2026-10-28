@@ -1,0 +1,144 @@
+﻿server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: optional:configserver:http://localhost:8888
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: profile-service-route
+          uri: lb://profile-service
+          predicates:
+            - Path=/api/profiles/**, /auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: profileCircuitBreaker
+                fallbackUri: forward:/fallback/profile
+        - id: product-service-route
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**, /products/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: productCircuitBreaker
+                fallbackUri: forward:/fallback/product
+        - id: cart-service-route
+          uri: lb://cart-service
+          predicates:
+            - Path=/api/carts/**, /cart/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: cartCircuitBreaker
+                fallbackUri: forward:/fallback/cart
+        - id: order-service-route
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**, /orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: orderCircuitBreaker
+                fallbackUri: forward:/fallback/order
+        - id: wallet-service-route
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/wallets/**, /wallet/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: walletCircuitBreaker
+                fallbackUri: forward:/fallback/wallet
+        - id: notification-service-route
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**, /notifications/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notificationCircuitBreaker
+                fallbackUri: forward:/fallback/default
+        - id: merchant-service-route
+          uri: lb://merchant-service
+          predicates:
+            - Path=/api/merchants/**, /merchant/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: merchantCircuitBreaker
+                fallbackUri: forward:/fallback/default
+        - id: delivery-service-route
+          uri: lb://delivery-partner-service
+          predicates:
+            - Path=/api/delivery/**, /delivery/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: deliveryCircuitBreaker
+                fallbackUri: forward:/fallback/default
+        - id: admin-service-route
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/**, /admin/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: adminCircuitBreaker
+                fallbackUri: forward:/fallback/default
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+    instances:
+      profileCircuitBreaker:
+        baseConfig: default
+      productCircuitBreaker:
+        baseConfig: default
+      cartCircuitBreaker:
+        baseConfig: default
+      orderCircuitBreaker:
+        baseConfig: default
+      walletCircuitBreaker:
+        baseConfig: default
+      notificationCircuitBreaker:
+        baseConfig: default
+      merchantCircuitBreaker:
+        baseConfig: default
+      deliveryCircuitBreaker:
+        baseConfig: default
+      adminCircuitBreaker:
+        baseConfig: default
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway, circuitbreakers, circuitbreakerevents
