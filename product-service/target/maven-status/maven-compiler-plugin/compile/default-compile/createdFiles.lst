@@ -1,0 +1,7 @@
+com\eshoppingzone\product\ProductServiceApplication.class
+com\eshoppingzone\product\resource\ProductResource.class
+com\eshoppingzone\product\service\ProductServiceImpl.class
+com\eshoppingzone\product\service\ProductService.class
+com\eshoppingzone\product\config\DataLoader.class
+com\eshoppingzone\product\entity\Product.class
+com\eshoppingzone\product\repository\ProductRepository.class
