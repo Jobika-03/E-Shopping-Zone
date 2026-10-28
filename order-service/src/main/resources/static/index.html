@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopNexa - Order Service Hub &amp; Multi-Order Management</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Top Navbar -->
+    <header class="navbar">
+        <a href="/" class="brand">
+            <div class="brand-icon">📦</div>
+            <span class="brand-text">ShopNexa</span>
+            <span class="brand-badge">Order Service</span>
+        </a>
+
+        <div class="customer-filter-bar">
+            <div class="customer-selector">
+                <label for="customerIdInput">Customer ID:</label>
+                <input type="number" id="customerIdInput" value="1" min="0" title="Enter 0 to view all orders">
+            </div>
+            <a href="http://localhost:8080/orders" target="_blank" class="btn btn-sm btn-outline" style="font-size: 0.8rem;">
+                🌐 Storefront Orders
+            </a>
+            <a href="http://localhost:8087/" target="_blank" class="btn btn-sm btn-outline" style="font-size: 0.8rem; color: #ea580c; border-color: #fdba74;">
+                🏪 Merchant Hub
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Customer Orders Management</h1>
+                <p class="page-subtitle">
+                    Manage multiple customer orders, track live shipment progress, and perform single or batch order cancellations and deletions.
+                </p>
+            </div>
+            <div>
+                <button class="btn btn-outline" onclick="loadOrders()">
+                    🔄 Refresh Orders
+                </button>
+            </div>
+        </div>
+
+        <!-- Alert Banner -->
+        <div id="pageAlert" class="alert" style="display: none;"></div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon blue">🛍️</div>
+                <div class="kpi-info">
+                    <h4>Total Orders</h4>
+                    <div class="kpi-value" id="kpiTotalOrders">0</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon amber">🚚</div>
+                <div class="kpi-info">
+                    <h4>Active / In-Transit</h4>
+                    <div class="kpi-value" id="kpiActiveOrders">0</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon green">✅</div>
+                <div class="kpi-info">
+                    <h4>Delivered</h4>
+                    <div class="kpi-value" id="kpiDeliveredOrders">0</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon red">❌</div>
+                <div class="kpi-info">
+                    <h4>Cancelled</h4>
+                    <div class="kpi-value" id="kpiCancelledOrders">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Action Toolbar (Visible when 1 or more orders are selected) -->
+        <div class="batch-toolbar" id="batchToolbar" style="display: none;">
+            <div class="batch-info">
+                <span>Selected: <strong id="selectedOrdersCount">0</strong> order(s)</span>
+            </div>
+            <div class="batch-actions">
+                <button type="button" class="btn btn-danger btn-sm" onclick="handleCancelSelectedOrders()">
+                    ❌ Cancel Selected Orders
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" style="color: #ffffff; border-color: #475569;" onclick="handleDeleteSelectedOrders()">
+                    🗑️ Delete Selected Orders
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" style="color: #94a3b8; border-color: transparent;" onclick="clearAllSelections()">
+                    Deselect All
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Tabs & Select All -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div class="filter-tabs" style="margin-bottom: 0;">
+                <button class="filter-btn active" data-filter="ALL">All Orders</button>
+                <button class="filter-btn" data-filter="ACTIVE">Active / In-Progress</button>
+                <button class="filter-btn" data-filter="DELIVERED">Delivered</button>
+                <button class="filter-btn" data-filter="CANCELLED">Cancelled</button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; color: #475569; font-weight: 600;">
+                <input type="checkbox" id="selectAllCheckbox" onchange="selectAllVisibleOrders(this.checked)" style="accent-color: #2563eb; width: 16px; height: 16px; cursor: pointer;">
+                <label for="selectAllCheckbox" style="cursor: pointer;">Select All Orders</label>
+            </div>
+        </div>
+
+        <!-- Orders Cards Container -->
+        <div id="ordersListContainer">
+            <!-- Populated via JavaScript -->
+        </div>
+
+        <!-- Empty Orders State -->
+        <div id="emptyOrdersState" class="empty-state" style="display: none;">
+            <div style="font-size: 3rem; margin-bottom: 0.75rem;">🛍️</div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.35rem;">No orders found</h3>
+            <p style="color: #64748b; font-size: 0.92rem; max-width: 440px; margin: 0 auto;">
+                There are no orders matching your current customer ID or filter.
+            </p>
+        </div>
+
+    </main>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

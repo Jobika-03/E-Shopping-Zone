@@ -1,0 +1,10 @@
+com\eshoppingzone\orders\OrderServiceApplication.class
+com\eshoppingzone\orders\resource\OrderViewController.class
+com\eshoppingzone\orders\resource\OrderResource.class
+com\eshoppingzone\orders\entity\Product.class
+com\eshoppingzone\orders\service\OrderServiceImpl.class
+com\eshoppingzone\orders\repository\OrderRepository.class
+com\eshoppingzone\orders\entity\Orders.class
+com\eshoppingzone\orders\entity\Address.class
+com\eshoppingzone\orders\service\OrderService.class
+com\eshoppingzone\orders\repository\AddressRepository.class
